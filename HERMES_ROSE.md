@@ -2,14 +2,18 @@
 
 ## 版本歷程
 
+### v4.0.0 (2026-07-24)
+- **重大架構變更**：從 chinese-divination（合併版 v3.2.0）拆分回獨立 Skill
+- Skill 名稱改回 `liuyao-divination`，觸發詞明確僅含六爻相關
+- 移除小六壬相關內容（divine.py 已移至 xiaoliuren-divination-rose）
+- 觸發詞不再包含「小六壬」「掐指一算」等小六壬專屬詞
+- 保留所有六爻功能、銅錢流派確認、影片知識來源
+
 ### v3.2.0 (2026-07-24)
-- **重大變更**：Skill 名稱從 `liuyao-divination` 改為 `chinese-divination`，合併六爻與小六壬
-- **新增**：小六壬卜卦功能（divine.py）
-- **新增**：銅錢陰陽面流派確認（CRITICAL），每次起卦前必須確認
-- **新增**：六爻案例誤讀研究（liuyao-case-study-misread.md）
-- **新增**：六爻影片知識來源（liuyao-video-sources.md）
-- **更新**：SKILL.md 重構為 chinese-divination 合併 skill
-- **知識來源**：文墨龍、易谷、曾仕強
+- 合併六爻+小六壬為 chinese-divination umbrella skill
+- 新增 CRITICAL：銅錢陰陽面流派確認
+- 新增小六壬卜卦功能（divine.py）
+- 新增六爻案例誤讀研究、影片知識來源
 
 ### v2.0 (2026-04-13)
 - 初始修改版，基於原版 liuyao-divination
