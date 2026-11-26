@@ -1,6 +1,6 @@
 ---
 name: liuyao-divination
-version: 4.0.0
+version: 4.1.0
 description: 六爻占卜（納甲筮法）。銅錢搖卦、蓍草法、納甲裝卦、六親六神、旺衰分析、深度斷卦。觸發詞：六爻、六爻占卜、銅錢卦、金錢卦、納甲、銅錢搖卦、起卦（六爻）。Use when user asks for liuyao divination, coin divination, najia analysis, or hexagram casting with full najia setup.
 triggers:
   - 六爻、六爻占卜、銅錢卦、金錢卦、納甲、銅錢搖卦
@@ -31,12 +31,15 @@ triggers:
 
 ## Coin Results Reference
 
-| Result | 正/反 | Name | Symbol | Type |
+⚠️ 此表為**方法 A（文墨龍：正面字面＝陰、反面＝陽）**的語意；方法 B（台幣：正面＝陽）的記錄不可直接查此表（每爻會判反）。通用規則看「陽面個數」：0＝老陰×、1＝少陽、2＝少陰、3＝老陽○（金錢卦不計三枚順序；陽面多≠陽爻——少者定性，口訣「選少的那個」，勿用多數決直覺）。
+| Result | 正/反（方法A語意） | Name | Symbol | Type |
 |:------:|:-----:|:----:|:------:|:----:|
 | 兩正一反 | 2:1 | 少陽 | — | Static Yang |
 | 一正兩反 | 1:2 | 少陰 | -- | Static Yin |
 | 三反 | 0:3 | 老陽 | ○ | Moving Yang → Yin |
 | 三正 | 3:0 | 老陰 | × | Moving Yin → Yang |
+
+**方法 B 換算表（台幣：正面＝陽）**：數「正」的個數——1正＝少陽、2正＝少陰、3正＝老陽○（動）、0正（三反）＝老陰×（動）。與上表每爻恰好相反（同一記錄兩法互為錯卦，例：同一搖卦記錄 A 得水山蹇→風地觀、B 得火澤睽→雷天大壯）。
 
 ## Casting Order & Structure
 
@@ -55,6 +58,7 @@ triggers:
 1. Ask the user which coin method they are using: 文墨龍古銅錢法 or 中華民國硬幣法 or custom definition
 2. Apply the corresponding yin/yang mapping consistently for all 6 throws
 3. Only after confirming the method, proceed to `parse_coins()` and full najia
+4. 確認的最小單位是**陰陽映射本身**（哪一面算陽面），幣種只是載體——自訂約定有無限多組，起卦前講明並全程一致即合法
 
 ### 方法 A：文墨龍傳統古銅錢法
 - 有年號的面（乾隆通寶、康熙通寶等）= 字面 = 正面 = **陰面**
@@ -65,7 +69,7 @@ triggers:
 - 正面（國父孫中山頭像＋中華民國年號面）= **陽面**
 - 反面／背面（面額面：壹圓、伍圓等）= **陰面**
 - ⚠️ 與文墨龍法正面陰陽定義**剛好相反**
-- 詳見 Wiki：易學/概念/補充/中華民國硬幣起卦法.md
+- 詳見 Wiki：易學/01_六爻裝卦/硬幣起卦法.md
 
 ### 方法 C：現代硬幣自定義（FB 教學 method）
 - 硬幣正反面可自行定義
@@ -133,8 +137,8 @@ Classic method from 繫辭上傳 Ch.9 — 大衍之數五十，其用四十有�
 | 二爻 | 2陽1陰 | 陰爻（少陰） | 不變 |
 | 三爻 | 2陽1陰 | 陰爻（少陰） | 不變 |
 | 四爻 | 2陰1陽 | 陽爻（少陽） | 不變 |
-| 五爻 | 3正面 | 老陽 | 變陰爻 |
-| 上爻 | 3反面 | 老陰 | 變陽爻 |
+| 五爻 | 3反面 | 老陽 | 變陰爻 |
+| 上爻 | 3正面 | 老陰 | 變陽爻 |
 
 - **本卦**：下卦=坤(地) + 上卦=兌(澤) = **澤地萃**（第45卦）
 - **變卦**：五爻老陽變陰→上卦由兌變離(火)，下卦不變= **火地晉**（第35卦）
@@ -144,6 +148,10 @@ Classic method from 繫辭上傳 Ch.9 — 大衍之數五十，其用四十有�
 - 六爻 interpretation is complex; always do full 納甲 setup before concluding
 - Ensure all 簡體 → 繁體 conversion when storing results in wiki
 - 網路排盤軟體有兩種排列方向（由上往下 vs 由下往上），輸入時需留意
+- scripts/liuyao_divine.py 三類裝卦 bug 已修復：①TRIGRAMS lines 曾誤用上→下序，非對稱卦會排成爻位顛倒的反卦；②get_xunwang 曾不管日干支永回甲子旬空戌亥；③najia 外卦曾誤取列表前3支，四五上爻地支六親全錯。已驗證：萃→晉、蹇→觀兩案例與傳統排盤一致
+- 爻位式輸入的陽靜爻寫**單一 `-`**：解析是 `'--' in part` 子字串判定，`---` 會被靜默解析成陰靜爻（正反式輸入不受此坑影響）
+- script 排出的納甲盤，引用前抽查二至三爻手推核對（TRIGRAM_DIZHI 列表＝內卦三支在前、外卦三支在後；六親以卦宮五行起）——排盤程式的靜默裝卦錯誤會讓動爻六親反掉、斷卦方向整體反轉
+- `lunar_converter.py` 的 cnlunar 裝在 Hermes 自帶直譯器（`/home/glenn/.hermes/tools/python*/bin/python3`）；終端預設 python3 報 ModuleNotFoundError 時改用該路徑，或先 `pip install cnlunar` 重試
 
 ### ⚠️ Common Misread Patterns
 
@@ -154,7 +162,7 @@ Classic method from 繫辭上傳 Ch.9 — 大衍之數五十，其用四十有�
 
 ### ⚠️ Script Bug: `get_trigram_from_line`
 
-The `build_hexagram()` function in `scripts/liuyao_divine.py` calls `get_trigram_from_line()` (line ~275) which is only defined as an alias for `get_trigram_from_lines()`. If the alias ever breaks or the function is removed, the outer trigram lookup will fail silently.
+The `build_hexagram()` function in `scripts/liuyao_divine.py` calls `get_trigram_from_line()` which is only defined as an alias for `get_trigram_from_lines()`. If the alias ever breaks or the function is removed, the outer trigram lookup will fail silently.
 
 ## Video Sources (影片學習來源)
 
@@ -164,9 +172,9 @@ The `build_hexagram()` function in `scripts/liuyao_divine.py` calls `get_trigram
 3. **曾仕強** — 如何卜卦？如何解卦？ (R7SCFbdpePc, 336K views)
 
 Wiki 知識庫頁面：
-- `易學/概念/補充/文墨龍銅錢起卦.md`
-- `易學/概念/補充/易谷六爻知識架構.md`
-- `易學/概念/補充/曾仕強卜卦解卦.md`
+- `易學/01_六爻裝卦/銅錢起卦法.md`
+- `易學/02_六爻斷卦/易谷六爻知識架構.md`
+- `易學/02_六爻斷卦/曾仕強卜卦解卦.md`
 
 ## Related Skills
 

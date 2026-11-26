@@ -6,9 +6,23 @@
 
 ## 版本資訊
 
-- **版本：** 4.0.0
-- **修改日期：** 2026-07-24
+- **版本：** 4.1.0
+- **修改日期：** 2026-11-26
 - **基於來源：** [glennchen2207/liuyao-divination](https://github.com/glennchen2207/liuyao-divination)
+
+---
+
+## v4.1.0 更新內容（2026-11-26：裝卦引擎修正）
+
+| 修正項 | 說明 |
+|:----:|:----|
+| 爻序 | 震/巽/艮/兌 TRIGRAMS 爻序曾誤用上→下序，非對稱卦會排成爻位顛倒的反卦 |
+| 旬空 | get_xunwang 曾不管日干支，永遠回傳甲子旬空「戌亥」；改為依當日干支所屬旬計算 |
+| 外卦納甲 | 四五上爻地支曾誤取列表前3支（內卦那組）；改取索引 3,4,5（TRIGRAM_DIZHI＝內卦三支在前、外卦三支在後） |
+| 爻位輸入 | 陽靜爻改用單一 `-`（`---` 含 `--` 子字串會被靜默解析為陰靜爻） |
+| SKILL.md | 新增方法B（台幣）換算表、動爻誤判陷阱、抽查核對建議；修正萃→晉範例的動爻正反 |
+
+✅ 驗證案例：澤地萃→火地晉（本卦、變卦、納甲六親、世應、六神、旬空均與傳統排盤一致）
 
 ---
 
@@ -47,9 +61,9 @@
 liuyao-divination-rose/
 ├── README.md                           # 本說明文件
 ├── HERMES_ROSE.md                      # 修改標註文件
-├── SKILL.md                            # Hermes Agent 技能定義（v4.0.0）
+├── SKILL.md                            # Hermes Agent 技能定義（v4.1.0）
 ├── scripts/
-│   ├── liuyao_divine.py               # 六爻計算腳本（36KB）
+│   ├── liuyao_divine.py               # 六爻計算腳本（35KB）
 │   └── lunar_converter.py              # 農曆轉換腳本
 └── references/
     ├── tables.md                       # 完整對照表
@@ -76,7 +90,7 @@ pip install cnlunar
 ```bash
 python scripts/liuyao_divine.py --coins "正正反 正反正 反反反 正正正 正反反 反正正"
 python scripts/liuyao_divine.py --coins "正正反 正反正 反反反 正正正 正反反 反正正" --question "感情"
-python scripts/liuyao_divine.py --coins "--- --- --O --X -- ---" --day "乙巳" --month "巳"
+python scripts/liuyao_divine.py --coins "- - --X - -- --O" --day "乙巳" --month "巳"   # 陽靜爻=單一 '-'；'---' 會被解析為陰靜
 ```
 
 ---

@@ -6,7 +6,7 @@
 
 使用方式：
     python liuyao_divine.py --coins "正正反 正反正 反反反 正正正 正反反 反正正"
-    python liuyao_divine.py --coins "--- --- --X --O -- -- ---" 
+    python liuyao_divine.py --coins "- - --X - -- --O"   # 陽靜=單一 '-'；'---' 含 '--' 子字串會被解析為陰
 """
 
 import sys
@@ -25,12 +25,12 @@ if sys.platform == 'win32':
 TRIGRAMS = {
     '乾': {'symbol': '☰', 'lines': [1, 1, 1], 'element': '金', 'nature': '天'},
     '坤': {'symbol': '☷', 'lines': [0, 0, 0], 'element': '土', 'nature': '地'},
-    '震': {'symbol': '☳', 'lines': [0, 0, 1], 'element': '木', 'nature': '雷'},
-    '巽': {'symbol': '☴', 'lines': [1, 1, 0], 'element': '木', 'nature': '風'},
+    '震': {'symbol': '☳', 'lines': [1, 0, 0], 'element': '木', 'nature': '雷'},
+    '巽': {'symbol': '☴', 'lines': [0, 1, 1], 'element': '木', 'nature': '風'},
     '坎': {'symbol': '☵', 'lines': [0, 1, 0], 'element': '水', 'nature': '水'},
     '離': {'symbol': '☲', 'lines': [1, 0, 1], 'element': '火', 'nature': '火'},
-    '艮': {'symbol': '☶', 'lines': [1, 0, 0], 'element': '土', 'nature': '山'},
-    '兌': {'symbol': '☱', 'lines': [0, 1, 1], 'element': '金', 'nature': '澤'},
+    '艮': {'symbol': '☶', 'lines': [0, 0, 1], 'element': '土', 'nature': '山'},
+    '兌': {'symbol': '☱', 'lines': [1, 1, 0], 'element': '金', 'nature': '澤'},
 }
 
 # 八卦序數（用於計算）
@@ -308,31 +308,21 @@ def get_shi_ying(hexagram_name: str, palace: str) -> Tuple[int, int]:
     return palace_data.get(hexagram_name, (6, 3))
 
 
-def get_xunwang(year_ganzhi: str) -> List[str]:
-    """取得當旬空亡"""
-    # 取得旬首
-    ganzhi_idx = TIANGAN_LIST.index(year_ganzhi[0]) if year_ganzhi[0] in TIANGAN_LIST else 0
-    dizhi_idx = DIZHI_LIST.index(year_ganzhi[1]) if year_ganzhi[1] in DIZHI_LIST else 0
-    
-    # 計算旬首（甲子、甲戌...）
-    # 甲子旬：甲子到癸酉
-    # 甲戌旬：甲戌到癸未
-    # 以此類推
-    xun_start_idx = (ganzhi_idx - dizhi_idx) % 10
-    if xun_start_idx < 0:
-        xun_start_idx += 10
-    
-    # 確定屬於哪一旬
-    xun_ganzhi_idx = dizhi_idx % 6  # 0=甲子, 1=甲戌, ...
-    xun_heads = ['甲子', '甲戌', '甲申', '甲午', '甲辰', '甲寅']
-    
-    # 計算當日干支所属旬
-    day_offset = (TIANGAN_LIST.index(year_ganzhi[0]) - dizhi_idx) % 60
-    for xun_head in xun_heads:
-        if xun_head in XUNWANG:
-            return XUNWANG[xun_head]
-    
-    return ['戌', '亥']  # 預設
+def get_xunwang(ganzhi: str) -> List[str]:
+    """取得當日干支所屬旬的空亡（旬首支+10/+11，甲子n=0）"""
+    if ganzhi[0] not in TIANGAN_LIST or ganzhi[1] not in DIZHI_LIST:
+        return ['戌', '亥']
+    # 60甲子序數（甲子=0）
+    n = 0
+    for i in range(60):
+        if TIANGAN_LIST[i % 10] == ganzhi[0] and DIZHI_LIST[i % 12] == ganzhi[1]:
+            n = i
+            break
+    # 旬首（甲子/甲戌/甲申/...）序數 = n - (n % 10)
+    head_zhi_idx = (n - (n % 10)) % 12
+    kong1 = DIZHI_LIST[(head_zhi_idx + 10) % 12]
+    kong2 = DIZHI_LIST[(head_zhi_idx + 11) % 12]
+    return [kong1, kong2]
 
 
 def parse_coins(coins_str: str) -> List[dict]:
@@ -341,7 +331,7 @@ def parse_coins(coins_str: str) -> List[dict]:
     
     輸入格式：
     - "正正反 正反正 反反反 正正正 正反反 反正正"（六次搖卦，空格分隔）
-    - 或 "--- --- --X --O -- -- ---"（爻位表示）
+    - 或 "- - --X - -- --O"（爻位表示：陽靜=單一 '-'，'---' 會被解析為陰靜）
     
     回傳：六爻資料（初爻到上爻）
     """
@@ -511,7 +501,8 @@ def najia(hexagram_data: dict, day_ganzhi: str) -> dict:
             dizhi = inner_dizhi[yao_num - 1]
             tiangan = inner_tiangan
         else:
-            dizhi = outer_dizhi[yao_num - 4]
+            # TRIGRAM_DIZHI 列表 = 內卦三支 + 外卦三支，外卦爻取索引 3,4,5
+            dizhi = outer_dizhi[yao_num - 1]
             tiangan = outer_tiangan
         
         # 爻五行
