@@ -151,7 +151,9 @@ Classic method from 繫辭上傳 Ch.9 — 大衍之數五十，其用四十有�
 - scripts/liuyao_divine.py 三類裝卦 bug 已修復：①TRIGRAMS lines 曾誤用上→下序，非對稱卦會排成爻位顛倒的反卦；②get_xunwang 曾不管日干支永回甲子旬空戌亥；③najia 外卦曾誤取列表前3支，四五上爻地支六親全錯。已驗證：萃→晉、蹇→觀兩案例與傳統排盤一致
 - 爻位式輸入的陽靜爻寫**單一 `-`**：解析是 `'--' in part` 子字串判定，`---` 會被靜默解析成陰靜爻（正反式輸入不受此坑影響）
 - script 排出的納甲盤，引用前抽查二至三爻手推核對（TRIGRAM_DIZHI 列表＝內卦三支在前、外卦三支在後；六親以卦宮五行起）——排盤程式的靜默裝卦錯誤會讓動爻六親反掉、斷卦方向整體反轉
-- `lunar_converter.py` 的 cnlunar 裝在 Hermes 自帶直譯器（`/home/glenn/.hermes/tools/python*/bin/python3`）；終端預設 python3 報 ModuleNotFoundError 時改用該路徑，或先 `pip install cnlunar` 重試
+- 對照已驗證案例重跑腳本時，--coins 的每爻正/反個數照 Coin Results 表逐爻推導後再轉寫；輸出與預期不符先核對自己的輸入轉寫再懷疑程式——錯一爻會排出一個看似合理的完全不同卦，甚至動爻位置也對得上
+- ⚠️ `liuyao_divine.py` 的 `--day/--month` 預設**硬編碼** `乙巳`/`巳`，不會自動取今日干支——真卦必須先用 `lunar_converter.py` 取真實日干支＋月建（節氣月，非單純農曆月）再傳入，否則六神、旬空、旺衰三項全錯；納甲六親／世應不受日辰影響，抽查時別被「六神看起來正確」的假象騙過
+- `lunar_converter.py` 的 cnlunar 裝在 python-3.14.9 那個直譯器（`/home/glenn/.hermes/tools/python-3.14.9+20261021-linux-x64/bin/python3`）；多個 python-* 並存時不可用 `head -1` 挑（3.14.7 沒裝 cnlunar 會誤判未安裝），或先 `pip install cnlunar` 重試
 
 ### ⚠️ Common Misread Patterns
 
@@ -180,3 +182,5 @@ Wiki 知識庫頁面：
 
 - `xiaoliuren-divination` — 小六壬卜卦（不同系統，觸發詞不同）
 - `chinese-divination` — 已合併為本 skill，不再使用
+
+GitHub mirror repo: `glennchen2207/liuyao-divination-rose`（公開 repo，隨本地版同步）；同步流程見 `github-repo-management` skill 的「Syncing a Local Copy to a Mirror Repo」段落
