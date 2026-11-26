@@ -6,9 +6,18 @@
 
 ## 版本資訊
 
-- **版本：** 4.1.0
+- **版本：** 4.2.0
 - **修改日期：** 2026-11-26
 - **基於來源：** [glennchen2207/liuyao-divination](https://github.com/glennchen2207/liuyao-divination)
+
+---
+
+## v4.2.0 更新內容（2026-11-26：起卦日/月建自動化）
+
+- `--day/--month` 不傳時**自動取今日干支＋節氣月建**（cnlunar；月建取八字月柱地支，節氣交界也正確），消除忘傳參數排錯盤的隱患
+- 自動取得失敗時印 ⚠️ 警告並退回寫死預設「乙巳日/巳月」——**帶警告的盤不可直接引用**
+- 輸出新增「月建」顯示（`占卜日：甲辰日｜月建：亥月`）
+- 修復：匯入 `lunar_converter` 前先驗 `cnlunar` 存在（該模組 import 時對缺套件會印訊息＋`sys.exit`，原本會把呼叫方拖崩）
 
 ---
 
@@ -61,7 +70,7 @@
 liuyao-divination-rose/
 ├── README.md                           # 本說明文件
 ├── HERMES_ROSE.md                      # 修改標註文件
-├── SKILL.md                            # Hermes Agent 技能定義（v4.1.0）
+├── SKILL.md                            # Hermes Agent 技能定義（v4.2.0）
 ├── scripts/
 │   ├── liuyao_divine.py               # 六爻計算腳本（35KB）
 │   └── lunar_converter.py              # 農曆轉換腳本
@@ -90,7 +99,7 @@ pip install cnlunar
 ```bash
 python scripts/liuyao_divine.py --coins "正正反 正反正 反反反 正正正 正反反 反正正"
 python scripts/liuyao_divine.py --coins "正正反 正反正 反反反 正正正 正反反 反正正" --question "感情"
-python scripts/liuyao_divine.py --coins "- - --X - -- --O" --day "乙巳" --month "巳"   # 陽靜爻=單一 '-'；'---' 會被解析為陰靜
+python scripts/liuyao_divine.py --coins "- - --X - -- --O" --day "甲辰" --month "亥"   # 陽靜爻=單一 '-'；'---' 會被解析為陰靜；--day/--month 不傳＝自動取今日（v4.2.0）
 ```
 
 ---

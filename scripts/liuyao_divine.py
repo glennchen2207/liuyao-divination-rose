@@ -11,6 +11,7 @@
 
 import sys
 import json
+import os
 import argparse
 from datetime import datetime
 from typing import List, Dict, Tuple, Optional
@@ -583,18 +584,64 @@ def analyze_wangshuai(element: str, month: str) -> str:
     return wang_table.get(season, {}).get(element, '休')
 
 
-def divine_coins(coins_str: str, day_ganzhi: str = '乙巳', month_dizhi: str = '巳') -> dict:
+def resolve_current_ganzhi() -> tuple:
+    """取得今日真實日干支與月建（節氣月）。
+
+    月建取八字月柱的地支——隨節氣切換（立冬→亥、大雪→子），正確於節氣交界；
+    需 cnlunar（同目錄 lunar_converter.py）。取得失敗回傳 (None, None)。
+    """
+    # 先驗 cnlunar 存在：lunar_converter 在匯入時對缺套件會印訊息並 sys.exit，
+    # SystemExit 不被 Exception 接住，會讓整個腳本崩潰——所以必須先擋
+    try:
+        import cnlunar  # noqa: F401
+    except ImportError:
+        return (None, None)
+    try:
+        from lunar_converter import convert_to_lunar
+    except ImportError:
+        try:
+            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+            from lunar_converter import convert_to_lunar
+        except ImportError:
+            return (None, None)
+    try:
+        r = convert_to_lunar(datetime.now().strftime('%Y-%m-%d'))
+        day_gz = r.get('day_ganzhi')
+        month_gz = r.get('month_ganzhi') or ''
+        month_zhi = month_gz[1] if len(month_gz) >= 2 else None
+        return (day_gz, month_zhi)
+    except Exception:
+        return (None, None)
+
+
+def divine_coins(coins_str: str, day_ganzhi: str = None, month_dizhi: str = None) -> dict:
     """
     銅錢搖卦占卜
     
     Args:
         coins_str: 銅錢搖卦結果
-        day_ganzhi: 占卜日干支
-        month_dizhi: 占卜月地支
+        day_ganzhi: 占卜日干支（None＝自動取今日干支；自動失敗回退預設「乙巳」並印警告）
+        month_dizhi: 占卜月地支（None＝自動取節氣月建；自動失敗回退預設「巳」並印警告）
     
     Returns:
         完整占卜結果
     """
+    # 日干支／月建未指定時自動取今日（cnlunar）；失敗退回寫死預設並警告
+    if day_ganzhi is None or month_dizhi is None:
+        auto_day, auto_month = resolve_current_ganzhi()
+        if day_ganzhi is None:
+            if auto_day:
+                day_ganzhi = auto_day
+            else:
+                day_ganzhi = '乙巳'
+                print("⚠️ 無法自動取得今日干支（缺 cnlunar 或轉換失敗），改用預設「乙巳日」——六神/旬空可能錯誤，請用 --day 指定！", file=sys.stderr)
+        if month_dizhi is None:
+            if auto_month:
+                month_dizhi = auto_month
+            else:
+                month_dizhi = '巳'
+                print("⚠️ 無法自動取得月建，改用預設「巳月」——旺衰可能錯誤，請用 --month 指定！", file=sys.stderr)
+
     # 解析銅錢
     yao_data = parse_coins(coins_str)
     
@@ -611,6 +658,8 @@ def divine_coins(coins_str: str, day_ganzhi: str = '乙巳', month_dizhi: str = 
     return {
         'hexagram': hexagram,
         'najia': najia_data,
+        'day_ganzhi': day_ganzhi,
+        'month_dizhi': month_dizhi,
     }
 
 
@@ -626,7 +675,10 @@ def format_output(result: dict, question_type: str = None) -> str:
     lines.append("## 🔮 六爻占卜")
     lines.append("")
     lines.append(f"**起卦方式**：銅錢搖卦法")
-    lines.append(f"**占卜日**：{najia['day_ganzhi']}日")
+    day_str = f"**占卜日**：{najia['day_ganzhi']}日"
+    if result.get('month_dizhi'):
+        day_str += f"｜**月建**：{result['month_dizhi']}月"
+    lines.append(day_str)
     lines.append("")
     
     # 本卦與變卦
@@ -780,8 +832,8 @@ def interpret_question(question_type: str, najia: dict) -> str:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='六爻占卜')
     parser.add_argument('--coins', '-c', type=str, help='銅錢搖卦結果')
-    parser.add_argument('--day', '-d', type=str, default='乙巳', help='占卜日干支')
-    parser.add_argument('--month', '-m', type=str, default='巳', help='占卜月地支')
+    parser.add_argument('--day', '-d', type=str, default=None, help='占卜日干支（預設：自動取今日干支，需 cnlunar；失敗回退乙巳）')
+    parser.add_argument('--month', '-m', type=str, default=None, help='占卜月建（預設：自動取節氣月支；失敗回退巳）')
     parser.add_argument('--question', '-q', type=str, help='問題類型')
     parser.add_argument('--json', '-j', action='store_true', help='輸出 JSON 格式')
     

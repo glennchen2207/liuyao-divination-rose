@@ -1,6 +1,6 @@
 ---
 name: liuyao-divination
-version: 4.1.0
+version: 4.2.0
 description: 六爻占卜（納甲筮法）。銅錢搖卦、蓍草法、納甲裝卦、六親六神、旺衰分析、深度斷卦。觸發詞：六爻、六爻占卜、銅錢卦、金錢卦、納甲、銅錢搖卦、起卦（六爻）。Use when user asks for liuyao divination, coin divination, najia analysis, or hexagram casting with full najia setup.
 triggers:
   - 六爻、六爻占卜、銅錢卦、金錢卦、納甲、銅錢搖卦
@@ -59,6 +59,7 @@ triggers:
 2. Apply the corresponding yin/yang mapping consistently for all 6 throws
 3. Only after confirming the method, proceed to `parse_coins()` and full najia
 4. 確認的最小單位是**陰陽映射本身**（哪一面算陽面），幣種只是載體——自訂約定有無限多組，起卦前講明並全程一致即合法
+5. 例外免問：使用者直接以每枚硬幣的『陰/陽』回報結果時（如「陰陰陽，陰陽陰…」），映射已自含，免問流派——直接以陽面個數定性（0＝老陰×、1＝少陽、2＝少陰、3＝老陽○）
 
 ### 方法 A：文墨龍傳統古銅錢法
 - 有年號的面（乾隆通寶、康熙通寶等）= 字面 = 正面 = **陰面**
@@ -151,9 +152,11 @@ Classic method from 繫辭上傳 Ch.9 — 大衍之數五十，其用四十有�
 - scripts/liuyao_divine.py 三類裝卦 bug 已修復：①TRIGRAMS lines 曾誤用上→下序，非對稱卦會排成爻位顛倒的反卦；②get_xunwang 曾不管日干支永回甲子旬空戌亥；③najia 外卦曾誤取列表前3支，四五上爻地支六親全錯。已驗證：萃→晉、蹇→觀兩案例與傳統排盤一致
 - 爻位式輸入的陽靜爻寫**單一 `-`**：解析是 `'--' in part` 子字串判定，`---` 會被靜默解析成陰靜爻（正反式輸入不受此坑影響）
 - script 排出的納甲盤，引用前抽查二至三爻手推核對（TRIGRAM_DIZHI 列表＝內卦三支在前、外卦三支在後；六親以卦宮五行起）——排盤程式的靜默裝卦錯誤會讓動爻六親反掉、斷卦方向整體反轉
+- 腳本只排**本卦**納甲，不輸出變卦爻支——動爻『化出』之支須自推：按**變卦卦象**取納甲同爻位地支（納甲依八卦不依宮：乾甲壬／坤乙癸／震庚／巽辛／坎戊／離己／艮丙／兌丁），再判進神/退神/化墓/回頭生剋（例：睽之大壯＝內乾外震，三爻丑化辰＝進神、上爻巳化戌＝火墓）
 - 對照已驗證案例重跑腳本時，--coins 的每爻正/反個數照 Coin Results 表逐爻推導後再轉寫；輸出與預期不符先核對自己的輸入轉寫再懷疑程式——錯一爻會排出一個看似合理的完全不同卦，甚至動爻位置也對得上
-- ⚠️ `liuyao_divine.py` 的 `--day/--month` 預設**硬編碼** `乙巳`/`巳`，不會自動取今日干支——真卦必須先用 `lunar_converter.py` 取真實日干支＋月建（節氣月，非單純農曆月）再傳入，否則六神、旬空、旺衰三項全錯；納甲六親／世應不受日辰影響，抽查時別被「六神看起來正確」的假象騙過
-- `lunar_converter.py` 的 cnlunar 裝在 python-3.14.9 那個直譯器（`/home/glenn/.hermes/tools/python-3.14.9+20261021-linux-x64/bin/python3`）；多個 python-* 並存時不可用 `head -1` 挑（3.14.7 沒裝 cnlunar 會誤判未安裝），或先 `pip install cnlunar` 重試
+- `--coins` 正反式的語意是『正』＝陰面、『反』＝陽面（方法A語意）。把使用者直接回報的『陰/陽』結果轉寫進腳本時必須**陰→正、陽→反**——照直覺『陽→正』會排出同一記錄的鏡像錯卦（兩法互錯例：蹇→觀 vs 睽→大壯）
+- **起卦日／月建自動化（v4.2.0）**：不傳 `--day/--month` 時自動取今日干支＋節氣月建（cnlunar 八字月柱地支，節氣交界也正確）；自動失敗印 ⚠️ 警告並退回寫死預設「乙巳日/巳月」——**帶警告的盤六神/旬空/旺衰不可直接引用**。納甲六親／世應不受日辰影響，抽查時別被「六神看起來正確」的假象騙過
+- `lunar_converter.py` 在 **import 時**就會對缺 cnlunar 環境印訊息＋`sys.exit`（SystemExit 不被 `except Exception` 接住，呼叫方會被拖崩）——要 import 它的程式必須先 `import cnlunar` 驗存在。cnlunar 裝在 python-3.14.9 直譯器（`/home/glenn/.hermes/tools/python-3.14.9+20261021-linux-x64/bin/python3`）；多個 python-* 並存不可用 `head -1` 挑（3.14.7 沒裝）
 
 ### ⚠️ Common Misread Patterns
 
