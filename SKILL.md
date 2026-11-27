@@ -1,9 +1,10 @@
 ---
 name: liuyao-divination
-version: 4.2.0
+version: 4.3.0
 description: 六爻占卜（納甲筮法）。銅錢搖卦、蓍草法、納甲裝卦、六親六神、旺衰分析、深度斷卦。觸發詞：六爻、六爻占卜、銅錢卦、金錢卦、納甲、銅錢搖卦、起卦（六爻）。Use when user asks for liuyao divination, coin divination, najia analysis, or hexagram casting with full najia setup.
 triggers:
   - 六爻、六爻占卜、銅錢卦、金錢卦、納甲、銅錢搖卦
+  - 之卦、以爻變解爻辭、古筮解經
   - 龜卦、文王卦、六爻卦
   - liuyao, najia divination, coin divination, hexagram casting
 ---
@@ -23,7 +24,7 @@ triggers:
 
 1. User shakes 6 coins and reports 正/反 for each throw
 2. Build 本卦 and 變卦 from results
-3. 納甲 (assign stem/branch, 六亲, 六神)
+3. 納甲 (assign stem/branch, 六親, 六神)
 4. Determine 世應 position
 5. Judge 旺衰 by month
 6. Select 用神 based on question type
@@ -32,6 +33,23 @@ triggers:
 ## 解卦輸出風格（Brian 偏好）
 
 固定節奏：**日常比喻建立直覺**（車、電梯、健身房等生活物件）→ **爻象與盤面重點用表格＋emoji** → 整體寓意 → **一句話總結收尾**。先比喻後術語、逐層疊加，不一次堆滿術語；全篇繁體。無具體問題念頭時明說「泛解供驗證、真占須先有問題」，不硬抓用神。
+
+- **術語大表不可單獨出場**：復盤對帳、翻案表、旺衰全表這類行話密集的表格，每個術語行都要配一列白話直譯（如「旬空＝這件事目前是空的」），或先寫白話劇情線、把術語表放到深讀附錄——行話堆疊的解說他讀不懂，只會回頭要求「簡單直白說明」。
+
+## 兩條解卦路線：納甲線 vs 古筮解經線（v4.3.0）
+
+- **納甲線**（主線，上方各節）：真問占——走六親用神、旺衰、應期。
+- **古筮解經線**：Brian 引用爻辭、問某句爻辭何義、或想以《易經》文本解卦時走這條。核心方法＝**之卦對照法**（古筮線第四法，管「單爻」）：原卦第 k 爻陰陽反轉得「之卦」，借之卦的卦名卦象卦義回解原爻辭；整卦層級另有卦義／拆卦／對卦三法。
+
+之卦對照三步：①定位爻位讀爻辭 → ②查 64 卦爻變表第 k 欄得之卦（例：乾初九→天風姤）→ ③用之卦之義印證或照亮原爻辭。過度解讀是此法最大風險——之卦義與原爻辭連不上時不可硬凹。
+
+⚠️ 兩線邊界：同一卦的納甲斷語（吉凶應期）與古筮解讀（爻辭意涵）可能不同，回報時標明依哪條線。
+
+Wiki 權威頁（掛載路徑讀取；384 爻→之卦對照表已全程式驗證，**勿憑記憶手查**）：
+- `易學/02_六爻斷卦/以爻變解爻辭——之卦對照法.md` — 第四法＋程式驗證版對照表
+- `易學/02_六爻斷卦/易經古法解卦——卦義拆卦與對卦.md` — 整卦層級三法
+
+臨場快速換算：本卦第 k 爻翻轉得新上下卦即之卦，卦名用 `get_hexagram_name(lower, upper)` 查 `HEXAGRAMS` 表（key＝(外卦,內卦)）；結果建議與 wiki 驗證表抽對核對。
 
 ## Coin Results Reference
 
@@ -160,10 +178,10 @@ Classic method from 繫辭上傳 Ch.9 — 大衍之數五十，其用四十有�
 - 對照已驗證案例重跑腳本時，--coins 的每爻正/反個數照 Coin Results 表逐爻推導後再轉寫；輸出與預期不符先核對自己的輸入轉寫再懷疑程式——錯一爻會排出一個看似合理的完全不同卦，甚至動爻位置也對得上
 - `--coins` 正反式的語意是『正』＝陰面、『反』＝陽面（方法A語意）。把使用者直接回報的『陰/陽』結果轉寫進腳本時必須**陰→正、陽→反**——照直覺『陽→正』會排出同一記錄的鏡像錯卦（兩法互錯例：蹇→觀 vs 睽→大壯）
 - **起卦日／月建自動化（v4.2.0）**：不傳 `--day/--month` 時自動取今日干支＋節氣月建（cnlunar 八字月柱地支，節氣交界也正確）；自動失敗印 ⚠️ 警告並退回寫死預設「乙巳日/巳月」——**帶警告的盤六神/旬空/旺衰不可直接引用**。納甲六親／世應不受日辰影響，抽查時別被「六神看起來正確」的假象騙過
-- **Brian 報的卦若不是當日卜的**（「上次卜的」「5月卜的」等），必須先確認**卜卦當天日期**再用 lunar_converter 取當日日柱＋月建重排——不可拿今天的日辰頂替：六神、旬空、旺衰、應期會全錯，甚至讀出相反結論（例：2026-11-26 曾誤用當日甲辰/亥月解 2026-05-11 週卜的卦，官鬼旬空→實為不空、世爻休→實為死、應期全組作廢）；不隨日辰變的只有卦象結構、六親世應、動爻與本變卦卦義
+- **Brian 報的卦若不是當日卜的**（「上次卜的」「5月卜的」等），必須先確認**卜卦當天日期**再用 lunar_converter 取當日日柱＋月建重排——不可拿今天的日辰頂替：六神、旬空、旺衰、應期整組全錯、結論可完全反轉（連是否旬空都會反掉）；日辰不影響的只有卦象結構——六親、世應、動爻與本變卦卦義
 - `lunar_converter.py` 在 **import 時**就會對缺 cnlunar 環境印訊息＋`sys.exit`（SystemExit 不被 `except Exception` 接住，呼叫方會被拖崩）——要 import 它的程式必須先 `import cnlunar` 驗存在。cnlunar 裝在 python-3.14.9 直譯器（`/home/glenn/.hermes/tools/python-3.14.9+20261021-linux-x64/bin/python3`）；多個 python-* 並存不可用 `head -1` 挑（3.14.7 沒裝）
 
-- `references/hexagrams.md` 僅收錄**部分**卦（各宮本宮＋少數重卦）——解卦前先确认該卦條目存在；缺條目時以卦辭＋大象傳為主，輔以脚本 `get_hexagram_info` 的卦義，勿當成全部六十四卦都已收錄
+- `references/hexagrams.md` 僅收錄**部分**卦（各宮本宮＋少數重卦）——解卦前先確認該卦條目存在；缺條目時以卦辭＋大象傳為主，輔以腳本 `get_hexagram_info` 的卦義，勿當成全部六十四卦都已收錄
 
 ### ⚠️ Common Misread Patterns
 
@@ -187,10 +205,22 @@ Wiki 知識庫頁面：
 - `易學/01_六爻裝卦/銅錢起卦法.md`
 - `易學/02_六爻斷卦/易谷六爻知識架構.md`
 - `易學/02_六爻斷卦/曾仕強卜卦解卦.md`
+- `易學/02_六爻斷卦/易經古法解卦——卦義拆卦與對卦.md`
+- `易學/02_六爻斷卦/以爻變解爻辭——之卦對照法.md`
 
 ## Related Skills
 
 - `xiaoliuren-divination` — 小六壬卜卦（不同系統，觸發詞不同）
 - `chinese-divination` — 已合併為本 skill，不再使用
 
-GitHub mirror repo: `glennchen2207/liuyao-divination-rose`（公開 repo，隨本地版同步）；同步流程見 `github-repo-management` skill 的「Syncing a Local Copy to a Mirror Repo」段落
+## 案例歸檔與隱私（Brian 拍板）
+
+- 個人事件卦例（轉職、財務、健康等真實人生決策）**主場＝Brian 的 wiki**：`易學/查詢/案例/`，frontmatter type=query＋`case-record` 標籤，建頁走建庫 SOP（區規範→索引/紀錄回寫→lint 0E0W→git）；references 只收去個人化骨架版（問者匿名、事件泛稱，範本 `liuyao-case-verified-job-change.md`）
+- wiki 卦例命名慣例（2026-11-27 井之需案確立）：已實證對帳＝`六爻實證案例-<卦>問<主題>`、新卜未驗證＝`六爻卦例-<卦>問<主題>`（檔名忌括號等特殊字元；驗證後不改檔名，回頁補對帳表＋待驗證項勾選）。索引易學區總頁數口徑＝排除 admin 三頁＋原始資料 7 頁＋學習路徑，僅算核心＋查詢
+- 本鏡像 repo 為公開——個人素材收進 skill/repo 前必須去個人化；有隱私疑慮的完整版留 wiki（解卦時掛載路徑讀得到，不因「我要參考」而收進 skill）
+- 錯誤舊資料＝**勘誤公告保留原文**：頂部 Banner 標明錯在哪＋指向正確版，不刪原文；新舊案例檔以檔內交叉引用接起
+
+GitHub mirror repo: `glennchen2207/liuyao-divination-rose`（公開）：
+- 升版同步三處：SKILL.md frontmatter `version`、README（版本區＋`vX.Y.Z 更新內容`節）、HERMES_ROSE.md（歷程節）；`gh repo edit --description` 同步 repo 描述
+- `.py` 以 LF 推送；commit 作者＝`glennchen2207 <glennchen2207@users.noreply.github.com>`（repo 既有慣例）
+- push 後以 `gh api repos/glennchen2207/liuyao-divination-rose/contents/<path>` 讀回驗證版本號／新函式在位才算完成

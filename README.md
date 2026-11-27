@@ -6,9 +6,18 @@
 
 ## 版本資訊
 
-- **版本：** 4.2.0
-- **修改日期：** 2026-11-26
+- **版本：** 4.3.0
+- **修改日期：** 2026-11-27
 - **基於來源：** [glennchen2207/liuyao-divination](https://github.com/glennchen2207/liuyao-divination)
+
+---
+
+## v4.3.0 更新內容（2026-11-27：古筮解經路線接入）
+
+- SKILL.md 新增「兩條解卦路線」節：納甲線之外接入**之卦對照法**（古筮線第四法——單爻陰陽反轉得之卦，借之卦卦義回解原爻辭）
+- 觸發詞新增「之卦、以爻變解爻辭、古筮解經」
+- 指向 wiki 權威頁：`以爻變解爻辭——之卦對照法.md`（384 爻全程式驗證對照表）＋`易經古法解卦——卦義拆卦與對卦.md`（整卦三法）；臨場換算可呼叫腳本 `get_hexagram_name` 查 `HEXAGRAMS` 表
+- SKILL.md 與本地 skill 主本完全同步（repo 舊版殘留簡體字一併清除）；裝卦引擎腳本本次無改動
 
 ---
 
@@ -70,7 +79,7 @@
 liuyao-divination-rose/
 ├── README.md                           # 本說明文件
 ├── HERMES_ROSE.md                      # 修改標註文件
-├── SKILL.md                            # Hermes Agent 技能定義（v4.2.0）
+├── SKILL.md                            # Hermes Agent 技能定義（v4.3.0）
 ├── scripts/
 │   ├── liuyao_divine.py               # 六爻計算腳本（35KB）
 │   └── lunar_converter.py              # 農曆轉換腳本
